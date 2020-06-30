@@ -1,0 +1,55 @@
+version: "3.7"
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.7.0
+    environment:
+      - "discovery.type=single-node"
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9200']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      default:
+        aliases:
+          - logs-elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.7.0
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:7.6.1
+    ports:
+      - 8200:8200
+    environment:
+    - output.elasticsearch.hosts=["elasticsearch:9200"]
+    depends_on:
+        - elasticsearch
+
+  redis:
+    image: redis:5-alpine
+    ports:
+      - 6379:6379
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+
+  mongo:
+    image: mongo:4.0
+    ports:
+      - 27017:27017
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+    command: bash -c "mongod --bind_ip_all --storageEngine wiredTiger --profile=1 --slowms=2000 --journalCommitInterval 500 --setParameter failIndexKeyTooLong=false"
