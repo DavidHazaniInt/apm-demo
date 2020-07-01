@@ -88,3 +88,30 @@ class ApmClient(
         **kwargs
     ):
         elasticapm.label(**kwargs)
+
+
+class Example:
+    def __init__(
+        self,
+        apm_client,
+    ):
+        self.apm_client = apm_client
+
+    @transaction(
+        trx_type=TransactionTypes.TASK,
+        trx_name='Example - do_somthing_important'
+    )
+    def do_somthing_important(
+        self,
+    ):
+        pass
+
+
+if __name__ == '__main__':
+    apm_client = ApmClient(
+        server_url='http://localhost:8200',
+    )
+
+    example = Example(
+        apm_client=apm_client
+    )
