@@ -68,7 +68,7 @@ class ApmClient(
         self,
         server_url,
         secret_token=None,
-        app_name='example 1',
+        app_name='example',
     ):
         super().__init__(
             service_name=app_name,
@@ -99,17 +99,36 @@ class Example:
 
     @transaction(
         trx_type=TransactionTypes.TASK,
-        trx_name='Example - do_somthing_important'
+        trx_name='Example - with_decorator'
     )
-    def do_somthing_important(
+    def with_decorator(
         self,
     ):
         pass
+
+    def without_decorator(
+        self,
+    ):
+        apm_client.begin_transaction(transaction_type='tasks')
+
+        try:
+            # Do something very important
+            pass
+        except Exception:
+            result = 'failure'
+        else:
+            result = 'success'
+        finally:
+            self.apm_client.end_transaction(
+                name='Example - without_decorator',
+                result=result,
+            )
 
 
 if __name__ == '__main__':
     apm_client = ApmClient(
         server_url='http://localhost:8200',
+        app_name='apm_client_example'
     )
 
     example = Example(
